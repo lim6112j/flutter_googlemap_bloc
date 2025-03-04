@@ -16,9 +16,15 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => MyAppState();
 }
-
+Stream<T> streamDelayer<T>(Stream<T> inputStream, Duration delay) async* {
+  await for (final val in inputStream) {
+    yield val;
+    await Future.delayed(delay);
+  }
+}
 StreamController<LatLng> streamController = StreamController<LatLng>();
-Stream stream = streamController.stream;
+Stream stream = streamDelayer(streamController.stream, Duration(seconds: 3));
+
 
 class MyAppState extends State<MyApp> {
   final Completer<GoogleMapController> _controller =
@@ -54,6 +60,8 @@ class MyAppState extends State<MyApp> {
   }
 
   Future<void> _mapTap(LatLng latlng) async {
+    streamController.add(latlng);
+    streamController.add(latlng);
     streamController.add(latlng);
     CameraPosition pos = CameraPosition(
       bearing: 192.8334901395799,
