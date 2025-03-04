@@ -42,7 +42,7 @@ class MyAppState extends State<MyApp> {
             _controller.complete(controller);
           },
           markers: markers,
-          onTap: _mapTap ,
+          onTap: _mapTap,
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _goToTheLake,
@@ -52,7 +52,8 @@ class MyAppState extends State<MyApp> {
       ),
     );
   }
-  Future<void> _mapTap(LatLng latlng) async{
+
+  Future<void> _mapTap(LatLng latlng) async {
     streamController.add(latlng);
     CameraPosition pos = CameraPosition(
       bearing: 192.8334901395799,
@@ -60,9 +61,16 @@ class MyAppState extends State<MyApp> {
       tilt: 59.440717697143555,
       zoom: 19.151926040649414,
     );
+
+    setState(() {
+        markers.clear();
+        markers.add(Marker(markerId: MarkerId("random"), position: latlng));
+    });
+    print('current markers : $markers');
     final GoogleMapController controller = await _controller.future;
     await controller.animateCamera(CameraUpdate.newCameraPosition(pos));
   }
+
   Future<void> _goToTheLake() async {
     final GoogleMapController controller = await _controller.future;
     Position userLocation = await _determinePosition();
