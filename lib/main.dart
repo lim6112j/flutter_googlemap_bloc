@@ -17,6 +17,9 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => MyAppState();
 }
 
+StreamController<LatLng> streamController = StreamController<LatLng>();
+Stream stream = streamController.stream;
+
 class MyAppState extends State<MyApp> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
@@ -39,6 +42,7 @@ class MyAppState extends State<MyApp> {
             _controller.complete(controller);
           },
           markers: markers,
+          onTap: _mapTap ,
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _goToTheLake,
@@ -48,19 +52,32 @@ class MyAppState extends State<MyApp> {
       ),
     );
   }
-
+  Future<void> _mapTap(LatLng latlng) async{
+    streamController.add(latlng);
+    CameraPosition pos = CameraPosition(
+      bearing: 192.8334901395799,
+      target: latlng,
+      tilt: 59.440717697143555,
+      zoom: 19.151926040649414,
+    );
+    final GoogleMapController controller = await _controller.future;
+    await controller.animateCamera(CameraUpdate.newCameraPosition(pos));
+  }
   Future<void> _goToTheLake() async {
     final GoogleMapController controller = await _controller.future;
     Position userLocation = await _determinePosition();
     double lat = userLocation.latitude;
     double lon = userLocation.longitude;
-    CameraPosition _kLake = CameraPosition(
+    CameraPosition kLake = CameraPosition(
       bearing: 192.8334901395799,
       target: LatLng(lat, lon),
       tilt: 59.440717697143555,
       zoom: 19.151926040649414,
     );
-    await controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+    stream.listen((value) {
+      print('1st sub: $value');
+    });
+    await controller.animateCamera(CameraUpdate.newCameraPosition(kLake));
   }
 }
 
