@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,39 +19,65 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => MyAppState();
 }
 
-Stream<T> streamDelayer<T>(Stream<T> inputStream, Duration delay) async* {
-  await for (final val in inputStream) {
-    yield val;
-    await Future.delayed(delay);
-  }
-}
-
-StreamController<LatLng> streamController = StreamController<LatLng>();
-Stream stream = streamDelayer(streamController.stream, Duration(seconds: 3));
-
 class MyAppState extends State<MyApp> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
+
+  void streamRegister(stream) {
+    stream.listen((value) {
+      print('1st sub: $value');
+    });
+  }
 
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, 137.085749655962),
     zoom: 14.4746,
   );
 
-  Set<Marker> markers = {};
+  late Set<Marker> markers;
+  Stream<T> streamDelayer<T>(Stream<T> inputStream, Duration delay) async* {
+    await for (final val in inputStream) {
+      yield val;
+      await Future.delayed(delay);
+    }
+  }
+
+  late StreamController<LatLng> streamController;
+  late Stream<LatLng> stream;
+  @override
+  void initState() {
+    super.initState();
+    streamController = StreamController<LatLng>();
+    stream = streamDelayer(streamController.stream, Duration(seconds: 1));
+    //streamRegister(stream);
+    markers = {};
+  }
+
   @override
   Widget build(BuildContext context) {
+    print('markers : $markers');
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        body: GoogleMap(
-          mapType: MapType.normal,
-          initialCameraPosition: _kGooglePlex,
-          onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
+        body: StreamBuilder<dynamic>(
+          stream: stream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              markers = {};
+            } else if (snapshot.hasError) {
+              markers = {};
+            } else if (!snapshot.hasData) {
+              markers = {};
+            }
+            Marker marker = Marker(
+              markerId: MarkerId("randome"),
+              position: snapshot.data ?? _kGooglePlex.target,
+            );
+            markers.clear();
+            markers.add(marker);
+
+            return loadMap(markers);
           },
-          markers: markers,
-          onTap: _mapTap,
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _goToTheLake,
@@ -60,13 +88,34 @@ class MyAppState extends State<MyApp> {
     );
   }
 
+  GoogleMap loadMap(markers) {
+    return GoogleMap(
+      mapType: MapType.normal,
+      initialCameraPosition: _kGooglePlex,
+      onMapCreated: (GoogleMapController controller) {
+        _controller.complete(controller);
+      },
+      markers: markers,
+      onTap: _mapTap,
+    );
+  }
+
   Future<void> _mapTap(LatLng latlng) async {
     streamController.add(latlng);
     streamController.add(
-      LatLng(latlng.latitude + 0.000000001, latlng.longitude + 0.000000001),
+      LatLng(latlng.latitude + 0.0001, latlng.longitude + 0.0001),
     );
     streamController.add(
-      LatLng(latlng.latitude + 0.000000002, latlng.longitude + 0.00000000),
+      LatLng(latlng.latitude + 0.0002, latlng.longitude + 0.0002),
+    );
+    streamController.add(
+      LatLng(latlng.latitude + 0.0003, latlng.longitude + 0.0003),
+    );
+    streamController.add(
+      LatLng(latlng.latitude + 0.0004, latlng.longitude + 0.0004),
+    );
+    streamController.add(
+      LatLng(latlng.latitude + 0.0005, latlng.longitude + 0.0005),
     );
     CameraPosition pos = CameraPosition(
       bearing: 192.8334901395799,
@@ -95,12 +144,6 @@ class MyAppState extends State<MyApp> {
       tilt: 59.440717697143555,
       zoom: 19.151926040649414,
     );
-    stream.listen((value) {
-      print('1st sub: $value');
-      setState(() {
-        markers = {Marker(markerId: MarkerId("random"), position: value)};
-      });
-    });
     await controller.animateCamera(CameraUpdate.newCameraPosition(kLake));
   }
 }
