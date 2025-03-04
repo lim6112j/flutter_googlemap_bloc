@@ -16,15 +16,16 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => MyAppState();
 }
+
 Stream<T> streamDelayer<T>(Stream<T> inputStream, Duration delay) async* {
   await for (final val in inputStream) {
     yield val;
     await Future.delayed(delay);
   }
 }
+
 StreamController<LatLng> streamController = StreamController<LatLng>();
 Stream stream = streamDelayer(streamController.stream, Duration(seconds: 3));
-
 
 class MyAppState extends State<MyApp> {
   final Completer<GoogleMapController> _controller =
@@ -61,8 +62,12 @@ class MyAppState extends State<MyApp> {
 
   Future<void> _mapTap(LatLng latlng) async {
     streamController.add(latlng);
-    streamController.add(latlng);
-    streamController.add(latlng);
+    streamController.add(
+      LatLng(latlng.latitude + 0.000000001, latlng.longitude + 0.000000001),
+    );
+    streamController.add(
+      LatLng(latlng.latitude + 0.000000002, latlng.longitude + 0.00000000),
+    );
     CameraPosition pos = CameraPosition(
       bearing: 192.8334901395799,
       target: latlng,
@@ -71,8 +76,8 @@ class MyAppState extends State<MyApp> {
     );
 
     setState(() {
-        markers.clear();
-        markers.add(Marker(markerId: MarkerId("random"), position: latlng));
+      markers.clear();
+      markers.add(Marker(markerId: MarkerId("random"), position: latlng));
     });
     print('current markers : $markers');
     final GoogleMapController controller = await _controller.future;
@@ -92,6 +97,9 @@ class MyAppState extends State<MyApp> {
     );
     stream.listen((value) {
       print('1st sub: $value');
+      setState(() {
+        markers = {Marker(markerId: MarkerId("random"), position: value)};
+      });
     });
     await controller.animateCamera(CameraUpdate.newCameraPosition(kLake));
   }
