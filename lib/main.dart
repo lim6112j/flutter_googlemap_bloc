@@ -32,6 +32,8 @@ class MyAppState extends State<MyApp> {
   );
 
   late Set<Marker> markers;
+  late Polyline polyline;
+  late List<LatLng> latlngs;
   Stream<T> streamDelayer<T>(Stream<T> inputStream, Duration delay) async* {
     await for (final val in inputStream) {
       yield val;
@@ -48,6 +50,7 @@ class MyAppState extends State<MyApp> {
     stream = streamDelayer(streamController.stream, Duration(seconds: 1));
     //streamRegister(stream);
     markers = {};
+    latlngs = [];
   }
 
   @override
@@ -76,6 +79,14 @@ class MyAppState extends State<MyApp> {
               markerId: MarkerId("randome"),
               position: snapshot.data ?? _kGooglePlex.target,
             );
+            for (var item in markers) {
+              latlngs.add(item.position);
+            }
+            latlngs.add(snapshot.data ?? _kGooglePlex.target);
+            polyline = Polyline(
+              polylineId: PolylineId("poly"),
+              points: latlngs,
+            );
             markers.clear();
             markers.add(marker);
 
@@ -83,6 +94,7 @@ class MyAppState extends State<MyApp> {
             return GoogleMap(
               mapType: MapType.normal,
               initialCameraPosition: _kGooglePlex,
+              polylines: {polyline},
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
               },
