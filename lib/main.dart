@@ -1,7 +1,4 @@
 import 'dart:async';
-import 'dart:math';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -54,6 +51,12 @@ class MyAppState extends State<MyApp> {
   }
 
   @override
+  void dispose() {
+    streamController.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     print('markers : $markers');
     return Directionality(
@@ -76,7 +79,16 @@ class MyAppState extends State<MyApp> {
             markers.clear();
             markers.add(marker);
 
-            return loadMap(markers);
+            //      return loadMap(markers);
+            return GoogleMap(
+              mapType: MapType.normal,
+              initialCameraPosition: _kGooglePlex,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+              markers: markers,
+              onTap: _mapTap,
+            );
           },
         ),
         floatingActionButton: FloatingActionButton.extended(
