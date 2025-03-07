@@ -39,13 +39,17 @@ class MyAppState extends State<MyApp> {
   late Set<Marker> markers;
   late Polyline polyline;
   late List<LatLng> latlngs;
-
+  late ScrollController _scrollController;
   @override
   void initState() {
     super.initState();
     markers = {};
     latlngs = [];
     polyline = Polyline(polylineId: PolylineId("poly"), points: latlngs);
+    _scrollController = ScrollController(
+      initialScrollOffset: 0.0,
+      keepScrollOffset: true,
+    );
   }
 
   @override
@@ -59,46 +63,79 @@ class MyAppState extends State<MyApp> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        body: BlocConsumer<RoutesBloc, RouteState>(
-          listener: (context, state) async{
-            CameraPosition pos = CameraPosition(
-              bearing: 192.8334901395799,
-              target: state.latlng,
-              tilt: 59.440717697143555,
-              zoom: 19.151926040649414,
-            );
-            final GoogleMapController controller = await _controller.future;
-            await controller.animateCamera(CameraUpdate.newCameraPosition(pos));
-          },
-          builder: (context, state) {
-            Marker marker = Marker(
-              markerId: MarkerId("random"),
-              position: state.latlng,
-            );
-            for (var item in markers) {
-              latlngs.add(item.position);
-            }
-            latlngs.add(state.latlng);
-            polyline = Polyline(
-              polylineId: PolylineId("poly"),
-              points: latlngs,
-            );
-            print('current latlngs : $latlngs');
-            markers.clear();
-            markers.add(marker);
-            return GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: _kGooglePlex,
-              polylines: {polyline},
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-              markers: markers,
-              onTap: (latlng) {
-                _mapTap(context.read<RoutesBloc>(), latlng);
-              },
-            );
-          },
+        body: Column(
+          children: [
+            Flexible(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: BlocConsumer<RoutesBloc, RouteState>(
+                  listener: (context, state) async {
+                    CameraPosition pos = CameraPosition(
+                      bearing: 192.8334901395799,
+                      target: state.latlng,
+                      tilt: 59.440717697143555,
+                      zoom: 19.151926040649414,
+                    );
+                    final GoogleMapController controller =
+                        await _controller.future;
+                    await controller.animateCamera(
+                      CameraUpdate.newCameraPosition(pos),
+                    );
+                  },
+                  builder: (context, state) {
+                    Marker marker = Marker(
+                      markerId: MarkerId("random"),
+                      position: state.latlng,
+                    );
+                    for (var item in markers) {
+                      latlngs.add(item.position);
+                    }
+                    latlngs.add(state.latlng);
+                    polyline = Polyline(
+                      polylineId: PolylineId("poly"),
+                      points: latlngs,
+                    );
+                    print('current latlngs : $latlngs');
+                    markers.clear();
+                    markers.add(marker);
+                    return GoogleMap(
+                      mapType: MapType.normal,
+                      initialCameraPosition: _kGooglePlex,
+                      polylines: {polyline},
+                      onMapCreated: (GoogleMapController controller) {
+                        _controller.complete(controller);
+                      },
+                      markers: markers,
+                      onTap: (latlng) {
+                        _mapTap(context.read<RoutesBloc>(), latlng);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+            Flexible(
+              flex: 2,
+              child: BlocBuilder<RoutesBloc, RouteState>(
+                builder: (context, state) {
+                  return ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: polyline.points.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Container(
+                        height: 50,
+                        color: Colors.amber[600],
+                        child: Center(child: Text('${polyline.points[index]}')),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _goToTheLake,
@@ -175,6 +212,8 @@ class MyAppState extends State<MyApp> {
     await controller.animateCamera(CameraUpdate.newCameraPosition(kLake));
   }
 }
+
+class _scrollController extends ScrollController {}
 
 /// Determine the current position of the device.
 ///
