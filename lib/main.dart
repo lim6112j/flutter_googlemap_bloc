@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cielai_googlemap/routes/bloc/routes_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -117,7 +118,9 @@ class MyAppState extends State<MyApp> {
             ),
             Flexible(
               flex: 2,
-              child: BlocBuilder<RoutesBloc, RouteState>(
+              child: BlocConsumer<RoutesBloc, RouteState>(
+                listener: (context, state) {
+                  _scrollController.jumpTo(50.0 * polyline.points.length);},
                 builder: (context, state) {
                   return ListView.builder(
                     controller: _scrollController,
