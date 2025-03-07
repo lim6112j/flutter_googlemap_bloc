@@ -9,15 +9,16 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const App());
 }
+
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => RoutesBloc() , child: MyApp(),);
+    return BlocProvider(create: (context) => RoutesBloc(), child: MyApp());
   }
-
 }
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -30,12 +31,6 @@ class MyAppState extends State<MyApp> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
-  void streamRegister(stream) {
-    stream.listen((value) {
-      print('1st sub: $value');
-    });
-  }
-
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, 137.085749655962),
     zoom: 14.4746,
@@ -44,28 +39,17 @@ class MyAppState extends State<MyApp> {
   late Set<Marker> markers;
   late Polyline polyline;
   late List<LatLng> latlngs;
-  Stream<T> streamDelayer<T>(Stream<T> inputStream, Duration delay) async* {
-    await for (final val in inputStream) {
-      yield val;
-      await Future.delayed(delay);
-    }
-  }
 
-  late StreamController<LatLng> streamController;
-  late Stream<LatLng> stream;
   @override
   void initState() {
     super.initState();
-    streamController = StreamController<LatLng>();
-    stream = streamDelayer(streamController.stream, Duration(seconds: 1));
-    //streamRegister(stream);
     markers = {};
     latlngs = [];
+    polyline = Polyline(polylineId: PolylineId("poly"), points: latlngs);
   }
 
   @override
   void dispose() {
-    streamController.close();
     super.dispose();
   }
 
@@ -75,43 +59,38 @@ class MyAppState extends State<MyApp> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        body: StreamBuilder<dynamic>(
-          stream: stream,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              markers = {};
-            } else if (snapshot.hasError) {
-              markers = {};
-            } else if (!snapshot.hasData) {
-              markers = {};
-            }
+        body: BlocListener<RoutesBloc, RouteState>(
+          listener: (context, state) {
             Marker marker = Marker(
-              markerId: MarkerId("randome"),
-              position: snapshot.data ?? _kGooglePlex.target,
+              markerId: MarkerId("random"),
+              position: state.latlng,
             );
             for (var item in markers) {
               latlngs.add(item.position);
             }
-            latlngs.add(snapshot.data ?? _kGooglePlex.target);
+            latlngs.add(state.latlng);
             polyline = Polyline(
               polylineId: PolylineId("poly"),
               points: latlngs,
             );
-            markers.clear();
-            markers.add(marker);
-
-            //      return loadMap(markers);
-            return GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: _kGooglePlex,
-              polylines: {polyline},
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-              markers: markers,
-              onTap: _mapTap,
-            );
+            print('current latlngs : $latlngs');
+            setState(() {
+              markers.clear();
+              markers.add(marker);
+            });
           },
+          child: GoogleMap(
+            mapType: MapType.normal,
+            initialCameraPosition: _kGooglePlex,
+            polylines: {polyline},
+            onMapCreated: (GoogleMapController controller) {
+              _controller.complete(controller);
+            },
+            markers: markers,
+            onTap: (latlng) {
+              _mapTap(context.read<RoutesBloc>(), latlng);
+            },
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _goToTheLake,
@@ -122,35 +101,42 @@ class MyAppState extends State<MyApp> {
     );
   }
 
-  GoogleMap loadMap(markers) {
-    return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: _kGooglePlex,
-      onMapCreated: (GoogleMapController controller) {
-        _controller.complete(controller);
-      },
-      markers: markers,
-      onTap: _mapTap,
+  Future<void> addEvents(RoutesBloc bloc, LatLng latlng) async {
+    bloc.add(RouteLatLngChanged(latlng));
+    await Future.delayed(Duration(seconds: 2));
+    bloc.add(
+      RouteLatLngChanged(
+        LatLng(latlng.latitude + 0.0001, latlng.longitude + 0.0001),
+      ),
+    );
+    await Future.delayed(Duration(seconds: 2));
+    bloc.add(
+      RouteLatLngChanged(
+        LatLng(latlng.latitude + 0.0002, latlng.longitude + 0.0002),
+      ),
+    );
+    await Future.delayed(Duration(seconds: 2));
+    bloc.add(
+      RouteLatLngChanged(
+        LatLng(latlng.latitude + 0.0003, latlng.longitude + 0.0003),
+      ),
+    );
+    await Future.delayed(Duration(seconds: 2));
+    bloc.add(
+      RouteLatLngChanged(
+        LatLng(latlng.latitude + 0.0004, latlng.longitude + 0.0004),
+      ),
+    );
+    await Future.delayed(Duration(seconds: 2));
+    bloc.add(
+      RouteLatLngChanged(
+        LatLng(latlng.latitude + 0.0005, latlng.longitude + 0.0005),
+      ),
     );
   }
 
-  Future<void> _mapTap(LatLng latlng) async {
-    streamController.add(latlng);
-    streamController.add(
-      LatLng(latlng.latitude + 0.0001, latlng.longitude + 0.0001),
-    );
-    streamController.add(
-      LatLng(latlng.latitude + 0.0002, latlng.longitude + 0.0002),
-    );
-    streamController.add(
-      LatLng(latlng.latitude + 0.0003, latlng.longitude + 0.0003),
-    );
-    streamController.add(
-      LatLng(latlng.latitude + 0.0004, latlng.longitude + 0.0004),
-    );
-    streamController.add(
-      LatLng(latlng.latitude + 0.0005, latlng.longitude + 0.0005),
-    );
+  Future<void> _mapTap(RoutesBloc bloc, LatLng latlng) async {
+    addEvents(bloc, latlng);
     CameraPosition pos = CameraPosition(
       bearing: 192.8334901395799,
       target: latlng,

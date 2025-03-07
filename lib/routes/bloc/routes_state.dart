@@ -8,5 +8,5 @@ final class RouteState extends Equatable {
   }
 
   @override
-  List<Object?> get props => throw UnimplementedError();
+  List<Object?> get props => [latlng];
 }
