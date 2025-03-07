@@ -59,7 +59,17 @@ class MyAppState extends State<MyApp> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        body: BlocBuilder<RoutesBloc, RouteState>(
+        body: BlocConsumer<RoutesBloc, RouteState>(
+          listener: (context, state) async{
+            CameraPosition pos = CameraPosition(
+              bearing: 192.8334901395799,
+              target: state.latlng,
+              tilt: 59.440717697143555,
+              zoom: 19.151926040649414,
+            );
+            final GoogleMapController controller = await _controller.future;
+            await controller.animateCamera(CameraUpdate.newCameraPosition(pos));
+          },
           builder: (context, state) {
             Marker marker = Marker(
               markerId: MarkerId("random"),
