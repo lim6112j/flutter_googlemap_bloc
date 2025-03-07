@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:cielai_googlemap/routes/bloc/routes_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -215,8 +214,6 @@ class MyAppState extends State<MyApp> {
     await controller.animateCamera(CameraUpdate.newCameraPosition(kLake));
   }
 }
-
-class _scrollController extends ScrollController {}
 
 /// Determine the current position of the device.
 ///
