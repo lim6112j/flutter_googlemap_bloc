@@ -59,8 +59,8 @@ class MyAppState extends State<MyApp> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        body: BlocListener<RoutesBloc, RouteState>(
-          listener: (context, state) {
+        body: BlocBuilder<RoutesBloc, RouteState>(
+          builder: (context, state) {
             Marker marker = Marker(
               markerId: MarkerId("random"),
               position: state.latlng,
@@ -74,23 +74,21 @@ class MyAppState extends State<MyApp> {
               points: latlngs,
             );
             print('current latlngs : $latlngs');
-            setState(() {
-              markers.clear();
-              markers.add(marker);
-            });
+            markers.clear();
+            markers.add(marker);
+            return GoogleMap(
+              mapType: MapType.normal,
+              initialCameraPosition: _kGooglePlex,
+              polylines: {polyline},
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+              markers: markers,
+              onTap: (latlng) {
+                _mapTap(context.read<RoutesBloc>(), latlng);
+              },
+            );
           },
-          child: GoogleMap(
-            mapType: MapType.normal,
-            initialCameraPosition: _kGooglePlex,
-            polylines: {polyline},
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
-            markers: markers,
-            onTap: (latlng) {
-              _mapTap(context.read<RoutesBloc>(), latlng);
-            },
-          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _goToTheLake,
