@@ -120,7 +120,7 @@ class MyAppState extends State<MyApp> {
               child: BlocConsumer<RoutesBloc, RouteState>(
                 listener: (context, state) {
                   _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent + 500,
+                    _scrollController.position.maxScrollExtent + 100,
                     curve: Curves.easeOut,
                     duration: const Duration(milliseconds: 500),
                   );
@@ -128,7 +128,7 @@ class MyAppState extends State<MyApp> {
                 builder: (context, state) {
                   return ListView.builder(
                     controller: _scrollController,
-                    reverse: true,
+                    reverse: false,
                     padding: const EdgeInsets.all(8),
                     itemCount: polyline.points.length,
                     itemBuilder: (BuildContext context, int index) {
