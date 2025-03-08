@@ -119,7 +119,12 @@ class MyAppState extends State<MyApp> {
               flex: 2,
               child: BlocConsumer<RoutesBloc, RouteState>(
                 listener: (context, state) {
-                  _scrollController.jumpTo(50.0 * polyline.points.length);},
+                  _scrollController.animateTo(
+                    _scrollController.position.maxScrollExtent + 500,
+                    curve: Curves.easeOut,
+                    duration: const Duration(milliseconds: 500),
+                  );
+                },
                 builder: (context, state) {
                   return ListView.builder(
                     controller: _scrollController,
